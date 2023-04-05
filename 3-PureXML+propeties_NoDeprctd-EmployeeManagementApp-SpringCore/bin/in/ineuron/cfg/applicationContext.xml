@@ -1,0 +1,48 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd">
+
+		<!-- Way to laod properties file- Not Deprecated - Sprinboot internally use this -->
+		<context:property-placeholder location="in/ineuron/commons/application.properties"/>
+
+	<!-- For performing Dependency Injection to Spring for getting dataSource Bean Object -->
+	<bean id="mySqlDataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource" abstract="true">
+		<property name="username" value="${dao.info.username}" />
+		<property name="password" value="${dao.info.password}" />
+	</bean>
+
+	<!-- jdbcUrl property is for Hikricp is mondatory , since this property is not present in MySQLDataSource -->
+	<!-- configuring HikariCp Connection pooling by provideing impl for dataSource -->
+	<bean id="hikari" class="com.zaxxer.hikari.HikariDataSource" parent="mySqlDataSource">
+		<property name="jdbcUrl" value="jdbc:mysql://localhost:3306/springdemodbo" />
+		<property name="minimumIdle" value="10" />
+		<property name="maximumPoolSize" value="20" />
+		<property name="connectionTimeout" value="2000" />
+	</bean>
+
+
+	<!-- For Performing Dependency injection to DAO ** Injecting dataSoures 
+		Object from the SpringFrame work to DAo -->
+	<bean id="employeeDao" class="in.ineuron.dao.EmployeeDaoImpl">
+		<constructor-arg name="dataSource" ref="hikari" />
+	</bean>
+
+
+	<!-- For injecting mySqlDaoimpl bean object to Service layer -->
+	<bean id="serviceImpl"
+		class="in.ineuron.service.EmployeeServiceImpl">
+		<constructor-arg name="dao" ref="employeeDao" />
+	</bean>
+
+
+	<!-- For injecting serviceImpl bean object to controller layer -->
+	<bean id="controller"
+		class="in.ineuron.controller.EmployeeControllerImpl">
+		<constructor-arg name="service" ref="serviceImpl" />
+	</bean>
+
+</beans>
